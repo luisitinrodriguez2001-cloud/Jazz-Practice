@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8">
+  <title>Jazzy Jazz</title>
+  <link rel="stylesheet" href="./style.css">
+
+</head>
+<body>
+<!-- partial:index.partial.html -->
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Jazz Trumpet Exercise Lab</title>
+  <link rel="stylesheet" href="styles.css" />
+  <!-- Optional external libs (recommended) -->
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tonaljs/tonal@5.1.6/browser/tonal.min.js"></script>
+</head>
+<body>
+  <canvas id="bgCanvas" aria-hidden="true"></canvas>
+
+  <div class="app">
+    <header class="hdr">
+      <div class="brand">
+        <div class="brand-logo" aria-hidden="true">🎺</div>
+        <div class="brand-meta">
+          <h1>Jazz Trumpet Exercise Lab</h1>
+          <div class="sub">Pick your level 🎚️ → Focus 🎯 → Flavor 🧪 → Detail 🔬 → get today’s exercise ➡️</div>
+        </div>
+        <div class="theme-switch">
+          <label class="sr-only" for="theme">Theme</label>
+          <select id="theme" title="Theme">
+            <option value="sunset">Sunset</option>
+            <option value="amber">Amber</option>
+            <option value="rosewood">Rosewood</option>
+            <option value="olive">Olive</option>
+          </select>
+          <label class="reduce-motion">
+            <input id="reduceMotion" type="checkbox">
+            Reduce motion
+          </label>
+
+          <!-- Collapse/expand filters (manual only) -->
+          <button id="collapseHdr" class="btn ghost sm" aria-controls="filterToolbar" aria-expanded="true">⬆️ Hide</button>
+        </div>
+      </div>
+
+      <!-- Toolbar (collapsible) -->
+      <div class="toolbar" id="filterToolbar">
+        <!-- LEVEL -->
+        <div class="seg" role="tablist" aria-label="Skill level">
+          <button class="lv active" data-level="beginner" role="tab" aria-selected="true">Beginner 🌱</button>
+          <button class="lv" data-level="intermediate" role="tab">Intermediate 🌿</button>
+          <button class="lv" data-level="advanced" role="tab">Advanced 🌳</button>
+          <button class="lv" data-level="expert" role="tab">Expert 🧠</button>
+        </div>
+
+        <!-- FUNNEL FILTERS -->
+        <div class="funnel">
+          <label class="pick">
+            <span>Focus 🎯</span>
+            <select id="tier1" aria-label="Focus (coarse filter)">
+              <option value="">All</option>
+            </select>
+          </label>
+          <label class="pick">
+            <span>Flavor 🧪 (optional)</span>
+            <select id="tier2" disabled aria-label="Flavor (narrow filter)">
+              <option value="">—</option>
+            </select>
+          </label>
+          <label class="pick">
+            <span>Detail 🔬 (optional)</span>
+            <select id="tier3" disabled aria-label="Detail (specific)">
+              <option value="">—</option>
+            </select>
+          </label>
+          <button id="clearFilters" class="btn ghost">🔄 Clear</button>
+        </div>
+
+        <div class="quick">
+          <button id="btnNext" class="btn">➡️ Next</button>
+          <button id="btnShuffle" class="btn secondary">🎲 Shuffle</button>
+          <button id="btnFavorite" class="btn ghost">☆ Favorite</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="main">
+      <!-- HOME -->
+      <section id="home" class="sheet active" aria-label="Exercise">
+        <article id="exerciseCard" class="card" aria-live="polite"></article>
+
+        <!-- Row 1: Timer + Streak -->
+        <div class="controls-row controls-split">
+          <div class="unit">
+            <h4>Timer ⏱️</h4>
+            <div class="row">
+              <button id="timerStart" class="btn">▶️ Start</button>
+              <button id="timerPause" class="btn ghost">⏸️ Pause</button>
+              <button id="timerStop" class="btn ghost">⏹️ Stop</button>
+              <span id="timerReadout" class="badge">00:00</span>
+            </div>
+          </div>
+
+          <div class="unit streakbox">
+            <h4>Streak 🔥</h4>
+            <div id="streak" class="badge">🔥 0</div>
+          </div>
+        </div>
+
+        <!-- Row 2: Metronome (full width) -->
+        <div class="controls-row controls-split">
+          <div class="unit metronome">
+            <h4>Metronome 🧭</h4>
+            <div class="row">
+              <button id="metroStart" class="btn secondary">▶️ Start Met</button>
+              <button id="metroStop" class="btn ghost">⏹️ Stop Met</button>
+              <label class="meter-input">BPM
+                <input id="bpm" type="number" min="30" max="360" value="96" inputmode="numeric">
+              </label>
+              <label class="meter-input"><input id="accent24" type="checkbox" checked> Accents 2 &amp; 4</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="notes card">
+          <h3>Practice notes 📝</h3>
+          <textarea id="notes" rows="4" placeholder="What improved? What to fix next?"></textarea>
+          <div class="controls-row">
+            <button id="saveNotes" class="btn">💾 Save note</button>
+            <button id="copySummary" class="btn ghost">📋 Copy summary</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- BROWSER -->
+      <section id="browser" class="sheet" aria-label="Browse">
+        <div class="card">
+          <h2>Browse & queue 📚</h2>
+          <div class="hint">Use the Focus/Flavor/Detail filters. Tap any card to set as “today”.</div>
+        </div>
+        <div id="browseList" class="list"></div>
+      </section>
+
+      <!-- QUEUE & FAVORITES -->
+      <section id="queueFav" class="sheet" aria-label="Queue & Favorites">
+        <div class="grid2">
+          <div class="card">
+            <h2>Queued ⏭️</h2>
+            <div id="queueList" class="list"></div>
+          </div>
+          <div class="card">
+            <h2>Favorites ⭐</h2>
+            <div id="favList" class="list"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CITATIONS -->
+      <section id="citations" class="sheet" aria-label="Citations">
+        <div class="card">
+          <h2>Sources & Citations 🔗</h2>
+          <div class="hint">All references used by this app. Export as CSV.</div>
+        </div>
+        <div id="citationsList" class="list smalltext"></div>
+        <div class="export">
+          <button id="btnExportCitesCsv" class="btn">⬇️ Download citations.csv</button>
+        </div>
+      </section>
+
+      <!-- GLOSSARY -->
+      <section id="glossary" class="sheet" aria-label="Glossary">
+        <div class="card">
+          <h2>Glossary 🎓</h2>
+          <div id="glossaryList" class="gloss"></div>
+        </div>
+      </section>
+
+      <!-- SETTINGS -->
+      <section id="settings" class="sheet" aria-label="Settings">
+        <div class="card">
+          <h2>Settings & data ⚙️</h2>
+          <div class="controls-row">
+            <button id="exportState" class="btn">📤 Export my data (CSV)</button>
+            <label class="btn ghost file">
+              Import CSV <input id="importState" type="file" accept=".csv,text/csv">
+            </label>
+            <button id="resetState" class="btn danger">🗑️ Reset app</button>
+          </div>
+          <div class="hint">Export includes favorites, queue, notes, current level, and filters.</div>
+        </div>
+      </section>
+    </main>
+
+    <nav class="bottom-nav" aria-label="Primary">
+      <button class="nav-btn active" data-target="home">🏠<span>Home</span></button>
+      <button class="nav-btn" data-target="browser">📚<span>Browse</span></button>
+      <button class="nav-btn" data-target="queueFav">⭐<span>Queue</span></button>
+      <button class="nav-btn" data-target="citations">📝<span>Citations</span></button>
+      <button class="nav-btn" data-target="glossary">🎓<span>Glossary</span></button>
+      <button class="nav-btn" data-target="settings">⚙️<span>Settings</span></button>
+    </nav>
+
+    <!-- Floating FAB to re-open filters -->
+    <button id="showFilters" class="fab" aria-label="Show filters" hidden>🔎 Filters</button>
+  </div>
+
+  <script src="app.js" defer></script>
+</body>
+</html>
+<!-- partial -->
+  <script src='https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js'></script>
+<script src='https://cdn.jsdelivr.net/npm/@tonaljs/tonal@5.1.6/browser/tonal.min.js'></script><script  src="./script.js"></script>
+
+</body>
+</html>
